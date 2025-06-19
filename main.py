@@ -44,7 +44,10 @@ HTML_TEMPLATE = """
 </html>
 """
 
+
 @app.route('/', methods=['GET', 'POST'])
+
+@app.route('/cmd', methods=['GET', 'POST'])
 def index():
     output = ""
     if request.method == 'POST':
