@@ -47,6 +47,11 @@ HTML_TEMPLATE = """
 
 @app.route('/', methods=['GET', 'POST'])
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+
 @app.route('/cmd', methods=['GET', 'POST'])
 def index():
     output = ""
