@@ -52,7 +52,7 @@ def run():
 
     
 @app.route('/')
-def index():
+def indexs():
     # 定義したHTML文字列をそのまま返す
     # Flaskはこれをレスポンスボディとしてブラウザに送ります
     return HTML_TEMPLATE
