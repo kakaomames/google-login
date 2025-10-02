@@ -51,6 +51,12 @@ def run():
         return "<h1>404 Not Found</h1>", 200
 
     
+@app.route('/')
+def index():
+    # 定義したHTML文字列をそのまま返す
+    # Flaskはこれをレスポンスボディとしてブラウザに送ります
+    return HTML_TEMPLATE
+
 
 @app.route("/run")
 def run_command():
