@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, send_file request
+from flask import Flask, request, render_template_string, send_file # 正しい順序に並べ替えてもOK
 import subprocess
 import os
 import io
