@@ -242,7 +242,7 @@ def favicon():
 
 
 @app.route('/cmd', methods=['GET', 'POST'])
-def index():
+def indexs():
     output = ""
     if request.method == 'POST':
         command = request.form['command'].strip()
