@@ -1,6 +1,7 @@
 from flask import Flask, render_template_string, request
 import subprocess
 import os
+import io
 
 app = Flask(__name__)
 # --- CSS定義 ---
