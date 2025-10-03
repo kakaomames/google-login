@@ -220,11 +220,6 @@ def run():
         return "<h1>404 Not Found</h1>", 200
 
     
-@app.route('/')
-def indexs():
-    # 定義したHTML文字列をそのまま返す
-    # Flaskはこれをレスポンスボディとしてブラウザに送ります
-    return HTML_TEMPLATE
 
 
 @app.route("/run")
@@ -240,8 +235,6 @@ def run_command():
     except Exception as e:
         return f"<pre>実行エラー: {str(e)}</pre>", 500
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
     
 @app.route('/favicon.ico')
 def favicon():
