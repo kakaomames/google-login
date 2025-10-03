@@ -79,40 +79,57 @@ HTML_SELECT_TEMPLATE = lambda name1, name2, original_url: f"""
 
 """
 
-# --- URLからファイル名候補を抽出するヘルパー関数 ---
+
+# --- URLからファイル名候補を抽出するヘルパー関数 (改良版) ---
 def get_filename_options(url):
     """
-    例: https://kakaomames.gothub.io/a/index.html -> ('index.html', 'a/index.html')
+    例: https://watchdocumentaries.com/wp-content/uploads/games/drift-boss/game.js 
+    -> ('game.js', 'drift-boss/game.js') を抽出
     """
+    DEFAULT_NAME_BASE = "downloaded_content"
+    
     try:
+        # URLを解析し、クエリやフラグメントを除去
         parsed_url = urlparse(url)
-        path = parsed_url.path.split(';')[0].split('?')[0] # クエリやパラメータを除去
+        path = parsed_url.path.split(';')[0].split('?')[0].strip('/')
+
+        if not path:
+            return f"{DEFAULT_NAME_BASE}.bin", f"root_{DEFAULT_NAME_BASE}.bin"
         
-        # 2. パス全体からファイル名候補を取得
+        # 1. name1: 最後の要素 (ファイル名のみ)
+        # os.path.basenameを使うと安全にファイル名を取得できます
+        name1 = os.path.basename(path)
+        if not name1: # 例: /path/to/ (スラッシュで終わる場合)
+            name1 = f"{DEFAULT_NAME_BASE}.html" # フォルダ名から推測する手もありますが、ここではデフォルト名を返す
+        
+        # 2. name2: パスの最後の2セグメント
         path_parts = path.split('/')
-        
-        # name1: 最後の要素 (index.html)
-        name1 = path_parts[-1] if path_parts[-1] else "downloaded_file"
-        
-        # name2: 最後の2,3要素 (a/index.html)
-        # 最後の要素が空の場合はその一つ前までを含める
+        # 最後の要素が空（スラッシュ終わり）なら、最後の2つではなく、その前の2つを取得
         if not path_parts[-1] and len(path_parts) > 1:
-            name2_parts = path_parts[-3:-1] if len(path_parts) >= 3 else path_parts[-2:-1]
+            name2_parts = path_parts[-3:-1]
         else:
-            name2_parts = path_parts[-2:] if len(path_parts) >= 2 else path_parts[-1:]
-            
+            name2_parts = path_parts[-2:]
+
         name2 = '/'.join(name2_parts).strip('/')
-        if not name2:
-            name2 = name1
-            
-        # 安全のため、/ を - に置換するなど、より厳密な処理が必要ですが、ここではユーザーの要望を優先します。
+        if not name2 or name2 == name1: # name1と同じか、うまく取得できなかった場合
+            # 最後の3つを取得してみる (e.g. games/drift-boss/game.js)
+            name2_parts = path_parts[-3:]
+            name2 = '/'.join(name2_parts).strip('/')
+            if not name2:
+                 name2 = f"full_{name1}" # 最終手段
         
-        # name1: index.html (basename)
-        # name2: a/index.html (dirname + basename)
+        # / が含まれていると send_file で問題になるため、/ を _ に置き換えて表示 (ダウンロード時にはまた / が入っていると困るので、download関数で処理します)
+        display_name2 = name2.replace('/', '_')
+        
+        # 表示のため、name2もファイル名として妥当な形に調整
+        if name1 == name2:
+             name2 = f"path_{name1}"
+
         return name1, name2
         
     except Exception:
-        return "downloaded_file.bin", "downloaded_file_full.bin"
+        # 何か問題が発生した場合のデフォルト値
+        return f"{DEFAULT_NAME_BASE}.bin", f"{DEFAULT_NAME_BASE}_full.bin"
 
 
 # --- ルート定義 ---
