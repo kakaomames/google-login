@@ -259,6 +259,19 @@ def run_command():
 def favicon():
     return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
+@app.route('/favicon.png')
+def favicons():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+@app.route('/favicon.svg')
+def faviconing():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+
+
+"""
+色見にくくね?
+"""
 
 @app.route('/cmd', methods=['GET', 'POST'])
 def indexs():
