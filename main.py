@@ -1,8 +1,13 @@
-from flask import Flask, request, render_template_string, send_file # 正しい順序に並べ替えてもOK
+from flask import Flask, request, render_template_string, send_file,redirect, url_for, jsonify, Response # 正しい順序に並べ替えてもOK
 import subprocess
 import os
 import io
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
+import subprocess
+import base64
+import json
+from bs4 import BeautifulSoup
+from typing import Tuple, Dict, Any, Union
 
 app = Flask(__name__)
 # --- CSS定義 ---
@@ -133,6 +138,259 @@ def get_filename_options(url):
 
 
 # --- ルート定義 ---
+
+
+
+
+
+
+
+
+
+
+
+
+# --- HTMLフォームの文字列定義 (トリプルクォート/ヒアドキュメント) ---
+def get_link_form_html() -> str:
+    """
+    /link エンドポイント用のHTMLフォーム文字列を返す
+    """
+    return """
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>URL探索フォームと結果表示</title>
+    <style>
+        body { font-family: sans-serif; }
+        .log-container { background-color: #f4f4f4; border: 1px solid #ddd; padding: 15px; margin-top: 20px; white-space: pre-wrap; font-family: monospace; font-size: 14px; }
+        .json-output { background-color: #e6e6ff; border: 1px solid #aaa; padding: 15px; margin-top: 20px; white-space: pre-wrap; font-family: monospace; font-size: 14px; }
+        .content-preview { 
+            border: 2px solid #333; 
+            margin-top: 20px; 
+            height: 300px; 
+            overflow: auto; 
+            padding: 10px; 
+            background-color: white; 
+        }
+    </style>
+</head>
+<body>
+    <h1>URL探索✨</h1>
+    
+    <form id="linkForm">
+        <input type="text" name="url" id="urlInput" placeholder="URLを入力してください (例: https://example.com)" size="50" required>
+        <button type="submit">探索🚀</button>
+    </form>
+
+    <div id="loading" style="display:none; color: blue; margin-top: 10px;">処理中... しばらくお待ちください。⏳</div>
+
+    <div id="results" style="margin-top: 30px; display:none;">
+        <h2>📝 JSON レスポンス</h2>
+        <pre class="json-output" id="jsonOutput"></pre>
+        
+        <h2>🌐 ネットワークログ (NL / logs)</h2>
+        <pre class="log-container" id="networkLog"></pre>
+
+        <h2>📄 コンテンツ (Base64からデコードし表示)</h2>
+        <p id="htmlStatus"></p>
+        <div class="content-preview" id="contentPreview"></div>
+    </div>
+
+    <script>
+        document.getElementById('linkForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // デフォルトのフォーム送信をキャンセル
+
+            const url = document.getElementById('urlInput').value;
+            const loading = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const jsonOutput = document.getElementById('jsonOutput');
+            const networkLog = document.getElementById('networkLog');
+            const contentPreview = document.getElementById('contentPreview');
+            const htmlStatus = document.getElementById('htmlStatus');
+
+            loading.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            try {
+                // /curl エンドポイントにリクエスト
+                const response = await fetch(`/curl?url=${encodeURIComponent(url)}`);
+                const json = await response.json();
+
+                // JSON全体を表示
+                jsonOutput.textContent = JSON.stringify(json, null, 2);
+                
+                const data = json.data;
+
+                // ネットワークログを表示
+                networkLog.textContent = data.NL || data.logs || 'ログなし';
+
+                // Base64コンテンツをデコード
+                // Base64はASCII文字のみなので、デコードは安全に行えます
+                const decodedContent = atob(data.code);
+                
+                // HTMLリライト情報
+                const isRewritten = json.data.is_html_rewritten;
+                htmlStatus.innerHTML = isRewritten 
+                    ? '💡 **HTMLコンテンツ**が検出され、**相対パス**が**絶対URL**に変換されました。'
+                    : '（HTMLコンテンツではない、またはリライトされませんでした。）';
+                
+                // コンテンツをエスケープして表示 (preタグでソースコード表示のように扱う)
+                contentPreview.textContent = decodedContent;
+                
+                // 結果を表示
+                resultsDiv.style.display = 'block';
+
+            } catch (error) {
+                // ネットワーク接続などのエラーの場合
+                jsonOutput.textContent = `リクエストエラー: ${error.message}`;
+                networkLog.textContent = `リクエストエラーが発生しました。`;
+                resultsDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+"""
+
+# --- 外部コマンド実行とログ取得 (バイナリ対応) ---
+def run_curl(url: str) -> Dict[str, Union[bytes, str]]:
+    """
+    curl -v -L URL を実行し、コンテンツ(bytes)とログ(str)を返す
+    """
+    try:
+        # text=False で stdout/stderr をバイト列(バイナリ)として受け取る
+        result = subprocess.run(
+            ['curl', '-v', '-L', url],
+            capture_output=True,
+            timeout=30 # タイムアウト設定
+        )
+        
+        # ログ (-v の出力) は stderr に含まれるので、UTF-8でデコード
+        logs = result.stderr.decode('utf-8', errors='ignore')
+        
+        return {
+            'content': result.stdout,
+            'log': logs,
+            'status': 'success'
+        }
+    except subprocess.TimeoutExpired:
+        return {'content': b'', 'log': 'Error: Curl command timed out.', 'status': 'timeout'}
+    except Exception as e:
+        return {'content': b'', 'log': f'Error: {str(e)}', 'status': 'error'}
+
+# --- HTMLパス変換 (案1ロジック採用) ---
+def rewrite_html_paths(html_content_bytes: bytes, base_url: str) -> Tuple[bytes, bool]:
+    """
+    BeautifulSoupでHTMLを解析し、相対パスを絶対パスに変換する
+    """
+    # 1. バイト列を文字列にデコード
+    try:
+        html_content_str = html_content_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        # デコードできない場合はHTMLではないと判断
+        return html_content_bytes, False
+
+    # 2. Beautiful Soupで解析と<html>タグの存在チェック
+    try:
+        soup = BeautifulSoup(html_content_str, 'html.parser')
+        
+        # <html>タグが見つからなければ、HTMLコンテンツではないと判断 (案1ロジック)
+        if not soup.html:
+            return html_content_bytes, False
+
+        # 3. HTMLタグと属性の書き換え処理
+        tags_and_attrs = {
+            'a': 'href', 'link': 'href', 'script': 'src', 
+            'img': 'src', 'source': 'src', 'video': 'poster',
+        }
+
+        for tag, attr in tags_and_attrs.items():
+            for element in soup.find_all(tag):
+                if element.has_attr(attr):
+                    url = element[attr]
+                    # 絶対URL以外を対象とする
+                    if not urlparse(url).scheme: 
+                        absolute_url = urljoin(base_url, url)
+                        element[attr] = absolute_url
+        
+        # 4. 書き換えたHTMLをバイト列に戻す
+        rewritten_html_bytes = str(soup).encode('utf-8')
+        return rewritten_html_bytes, True
+
+    except Exception as e:
+        print(f"HTML parsing/rewriting error: {e}")
+        # エラーが発生した場合は、元のバイト列を返す
+        return html_content_bytes, False
+
+# --- エンドポイント1: URL入力フォーム ---
+@app.route('/link', methods=['GET', 'POST'])
+def link_form() -> Response:
+    """
+    URL入力フォームの表示と、POSTリクエストを/curlへリダイレクトする処理
+    """
+    if request.method == 'POST':
+        url = request.form.get('url')
+        if url:
+            # POSTを受け取り、GETで処理する /curl へリダイレクト
+            return redirect(url_for('curl_request', url=url))
+        
+    # GETリクエスト、またはPOSTでURLがない場合は、直接HTML文字列を返す
+    return Response(get_link_form_html(), mimetype='text/html')
+
+# --- エンドポイント2: curl実行と結果表示 (JSONレスポンス) ---
+@app.route('/curl', methods=['GET', 'POST'])
+def curl_request() -> Tuple[Response, int]:
+    """
+    curl -v -L を実行し、結果をJSON形式で返す
+    """
+    url = request.args.get('url') # GETパラメータからURLを取得
+    
+    if not url:
+        return jsonify({
+            'data': {
+                'url': '',
+                'code': '',
+                'logs': 'Error: URL parameter is missing.',
+                'NL': 'Error: URL parameter is missing.',
+            }
+        }), 400
+
+    # 1. curlコマンドを実行
+    result = run_curl(url)
+    
+    # 2. コンテンツがHTMLであればパスを変換 (Base64エンコード前にリライト)
+    content_binary = result['content']
+    
+    # HTML判定とパスリライトの実行
+    content_binary, is_html = rewrite_html_paths(content_binary, url)
+    
+    # 3. バイナリコンテンツをBase64にエンコード
+    # Base64はバックスラッシュをそのまま使用するため、JSONの要件にも合致します
+    content_base64 = base64.b64encode(content_binary).decode('utf-8')
+    
+    # 4. JSONレスポンスの構築
+    response_data = {
+        'url': url,
+        # code: curlの結果のバイナリ(Base64エンコード)
+        'code': content_base64, 
+        # logs: curlコマンドの -v で出たやつ
+        'logs': result['log'],
+        # NL: Network Logの略。logsと同じ内容を格納
+        'NL': result['log'],
+        # (追加) HTMLをリライトしたかどうかの情報
+        'is_html_rewritten': is_html 
+    }
+
+    # 成功ステータスでJSONを返す
+    return jsonify({'data': response_data}), 200
+
+
+
+
+
 
 @app.route('/', methods=['GET'])
 def index():
