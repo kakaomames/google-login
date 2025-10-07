@@ -65,9 +65,11 @@ HOMEHTML = """
                 <li><a href="/home">ホーム</a></li>
                 <li><a href="/h">GITHUBにセーブデータ保存</a></li>
                 <li><a href="/cmd">Webコマンド実行ツール</a></li>
-                <li><a href="/run">ゲームメニュー</a></li>
-                <li><a href="/offline">オフラインプレイ</a></li>
-                <li><a href="/import">パックをインポート</a></li>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <li><a href="/games">ゲーム👿</a></li>
+                
             </ul>
         </nav>
     </header>
