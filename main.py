@@ -14,8 +14,70 @@ from typing import Tuple, Dict, Any, Union
 app = Flask(__name__)
 
 INDEX_HTML = """
-<html>
-そういう日もあるさ
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホームページ - pokemoguプロジェクト</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="https://kakaomames.github.io/Minecraft-flask-app/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-16x16.png">
+<link rel="manifest" href="https://kakaomames.github.io/Minecraft-flask-app/static/site.webmanifest">
+    <link rel="stylesheet" href="https://kakaomames.github.io/Minecraft-flask-app/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>HOME🏠</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+    </main>
+    <footer>
+        <p>&copy; 2025  pokemoguプロジェクト</p>
+    </footer>
+</body>
+</html>
+"""
+
+HOMEHTML = """
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム - マイクラプロジェクト</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="https://kakaomames.github.io/Minecraft-flask-app/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-16x16.png">
+<link rel="manifest" href="https://kakaomames.github.io/Minecraft-flask-app/static/site.webmanifest">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>マイクラプロジェクト</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <li><a href="/run">ゲームメニュー</a></li>
+                <li><a href="/offline">オフラインプレイ</a></li>
+                <li><a href="/import">パックをインポート</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <p>ここはホーム画面です。各メニューから移動してください。</p>
+    </main>
+    <footer>
+        <p>&copy; 2025 マイクラプロジェクト</p>
+    </footer>
+</body>
 </html>
 """
 
@@ -23,6 +85,14 @@ INDEX_HTML = """
 def indexhhhhhhhh():
     """最初のURL入力フォームを表示"""
     return render_template_string(INDEX_HTML())
+
+
+@app.route('/home', methods=['GET'])
+def indexhhhhhhhd():
+    """最初のURL入力フォームを表示"""
+    return render_template_string(HOMEHTML())
+
+
 
 
 
