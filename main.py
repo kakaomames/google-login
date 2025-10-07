@@ -120,13 +120,13 @@ GAMEHTML = """
         <p>ここはゲーム選択画面です。</p>
         <nav>
             <ul>
-                <li><a href=https://kakaomames.githun.io/rei/UNO/">UNO</a></li>
-                <li><a href="https://kakaomames.githun.io/rei/db/draft-boss">drift boss</a></li>
-                <li><a href="https://kakaomames.githun.io/suika/file/">スイカゲーム</a></li>
+                <li><a href=https://kakaomames.github.io/rei/UNO/">UNO</a></li>
+                <li><a href="https://kakaomames.github.io/rei/db/draft-boss">drift boss</a></li>
+                <li><a href="https://kakaomames.github.io/suika/file/">スイカゲーム</a></li>
                 <br>
-                <li><a href="https://kakaomames.githun.io/rei/WebMC/">マイクラ❶</a></li>
-                <li><a href="https://kakaomames.githun.io/rei/minecraft classic/">マイクラ❷</a></li>
-                <li><a href="https://kakaomames.githun.io/rei/ビビットアーミー/">ビビットアーミー（試験的）</a></li>
+                <li><a href="https://kakaomames.github.io/rei/WebMC/">マイクラ❶</a></li>
+                <li><a href="https://kakaomames.github.io/rei/minecraft classic/">マイクラ❷</a></li>
+                <li><a href="https://kakaomames.github.io/rei/ビビットアーミー/">ビビットアーミー（試験的）</a></li>
                 <br>
                 <li><a href=https://kakaomames.github.io/yuki-bookmark/">youtube👿</a></li>
                 
