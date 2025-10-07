@@ -50,7 +50,7 @@ HOMEHTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ホーム - マイクラプロジェクト</title>
+    <title>ホーム - pokemoguプロジェクト</title>
     <link rel="apple-touch-icon" sizes="180x180" href="https://kakaomames.github.io/Minecraft-flask-app/static/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="https://kakaomames.github.io/Minecraft-flask-app/static/favicon-16x16.png">
@@ -79,7 +79,7 @@ HOMEHTML = """
         <p>ここはホーム画面です。各メニューから移動してください。</p>
     </main>
     <footer>
-        <p>&copy; 2025 マイクラプロジェクト</p>
+        <p>&copy; 2025 pokemoguプロジェクト</p>
     </footer>
 </body>
 </html>
@@ -109,6 +109,7 @@ CUSTOM_CSS = """
         pre { background-color: #e2e2e2; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
         .warning { color: red; font-weight: bold; text-align: center; margin-bottom: 15px; }
     </style>
+    <link rel="stylesheet" href="https://kakaomames.github.io/Minecraft-flask-app/static/style.css">
 """
 
 # --- テンプレート (1): URL入力フォーム ---
@@ -123,7 +124,22 @@ HTML_FORM_TEMPLATE = lambda warning="": f"""
 </head>
 <body>
     <div class="container">
-        <h1>🔗 オンラインダウンローダー</h1>
+     <h1>🔗 オンラインダウンローダー</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
+    </header>
         {f'<p class="warning">{warning}</p>' if warning else ''}
         <p>ダウンロードしたいファイルのURLを入力してください。</p>
         <form method="POST" action="/select_name">
@@ -149,7 +165,22 @@ HTML_SELECT_TEMPLATE = lambda name1, name2, original_url: f"""
 </head>
 <body>
     <div class="container">
-        <h1>ファイル名の選択</h1>
+     <h1>ファイル名の選択</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
+    </header>
         <p>ダウンロードするファイル名を以下の2つの候補から選択してください。</p>
         <form method="POST" action="/download">
             <input type="hidden" name="original_url" value="{original_url}">
@@ -261,10 +292,24 @@ def get_link_form_html() -> str:
             background-color: white; 
         }
     </style>
+    <link rel="stylesheet" href="https://kakaomames.github.io/Minecraft-flask-app/static/style.css">
 </head>
 <body>
     <h1>URL探索✨</h1>
-    
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
     <form id="linkForm">
         <input type="text" name="url" id="urlInput" placeholder="URLを入力してください (例: https://example.com)" size="50" required>
         <button type="submit">探索🚀</button>
@@ -499,10 +544,25 @@ HTML1 = """
         button { padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
         button:hover { background-color: #2980b9; }
     </style>
+    <link rel="stylesheet" href="https://kakaomames.github.io/Minecraft-flask-app/static/style.css">
 </head>
 <body>
     <div class="container">
         <h1>GitHub API ファイル操作ツール 📁</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
         <p>上書き保存 (SHA取得) に対応しました。</p>
 
         <h2>/post エンドポイントへの送信テスト</h2>
@@ -746,10 +806,26 @@ HTML_TEMPLATE = """
         pre { background-color: #e2e2e2; padding: 15px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
         .warning { color: red; font-weight: bold; text-align: center; margin-bottom: 15px; }
     </style>
+    <link rel="stylesheet" href="https://kakaomames.github.io/Minecraft-flask-app/static/style.css">
 </head>
 <body>
     <div class="container">
         <h1>Webコマンド実行ツール (Flask)</h1>
+        
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
         <p class="warning">警告: このツールは非常に危険です。自己責任で、信頼できる環境でのみ使用してください。</p>
 
         <form method="POST">
