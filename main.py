@@ -19,7 +19,7 @@ INDEX_HTML = """
 """
 
 @app.route('/', methods=['GET'])
-def index():
+def indexhhhhhhhh():
     """最初のURL入力フォームを表示"""
     return render_template_string(INDEX_HTML())
 
@@ -464,7 +464,7 @@ HTML1 = """
 
 # ルートURL ("/")
 @app.route('/h', methods=['GET'])
-def index():
+def indexhhh():
     return render_template_string(HTML1)
 
 # GitHub APIへのデータ送信エンドポイント - 上書き保存機能付き
@@ -605,7 +605,7 @@ def handle_github_post():
 
 
 @app.route('/url-dl', methods=['GET'])
-def index():
+def indexl():
     """最初のURL入力フォームを表示"""
     return render_template_string(HTML_FORM_TEMPLATE())
 
