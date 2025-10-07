@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string, send_file,redirect, url_for, jsonify, Response # 正しい順序に並べ替えてもOK
+from flask import Flask, request, render_template_string, send_file,redirect, url_for, jsonify, Response, send_from_directory # 正しい順序に並べ替えてもOK
 import subprocess
 import os
 import io
