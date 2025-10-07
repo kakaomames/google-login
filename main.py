@@ -3,13 +3,34 @@ import subprocess
 import os
 import io
 from urllib.parse import urljoin, urlparse
-import subprocess
+import requests
 import base64
 import json
 from bs4 import BeautifulSoup
 from typing import Tuple, Dict, Any, Union
 
+ 
+
 app = Flask(__name__)
+
+INDEX_HTML = """
+<html>
+</html>
+"""
+
+@app.route('/', methods=['GET'])
+def index():
+    """最初のURL入力フォームを表示"""
+    return render_template_string(INDEX_HTML())
+
+
+
+
+
+
+
+
+
 # --- CSS定義 ---
 CUSTOM_CSS = """
     <style>
@@ -392,7 +413,198 @@ def curl_request() -> Tuple[Response, int]:
 
 
 
-@app.route('/', methods=['GET'])
+
+
+
+# FSK (Flask Secret Key) を環境変数から取得
+app.secret_key = os.environ.get('FSK', 'my_insecure_development_key')
+
+# ユーザーが用意したHTML文字列（変更なし）
+HTML1 = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>トップページ - GitHub連携ツール</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background-color: #f4f7f9; }
+        .container { max-width: 600px; margin: auto; padding: 25px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: white; box-shadow: 0 4px 6px rgba(0, 4px, 6px, 0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub API ファイル操作ツール 📁</h1>
+        <p>上書き保存 (SHA取得) に対応しました。</p>
+
+        <h2>/post エンドポイントへの送信テスト</h2>
+        <form action="/post" method="POST">
+            <label for="data">送信用JSONデータ (ファイル情報):</label>
+            <textarea id="data" name="data" rows="15">
+{
+    "metadata": {
+        "type": "py",
+        "size": "500B",
+        "name": "app_v1.py",
+        "data": {
+            "code": "print('Updated code!')",
+            "url": "https://github.com/GN_placeholder/project_repo/src/main/"
+        }
+    }
+}
+            </textarea>
+            <button type="submit">GitHubへデータをPOST送信</button>
+        </form>
+    </div>
+</body>
+</html>
+"""
+
+# ルートURL ("/")
+@app.route('/h', methods=['GET'])
+def index():
+    return render_template_string(HTML1)
+
+# GitHub APIへのデータ送信エンドポイント - 上書き保存機能付き
+@app.route('/post', methods=['POST'])
+def handle_github_post():
+    # 略語環境変数の取得
+    GITHUB_TOKEN = os.environ.get("GAP")  # GitHub APIpad
+    REPO_OWNER = os.environ.get("GN")     # GitHub Name (Owner)
+
+    # 環境変数チェック (FSKはFlaskが内部で使うため省略)
+    if not (GITHUB_TOKEN and REPO_OWNER):
+        return jsonify({"error": "必須環境変数が設定されていません。(GAP, GN)"}), 500
+
+    # 1. データの取得と構造チェック
+    try:
+        data = request.get_json() if request.is_json else json.loads(request.form.get('data'))
+        
+        metadata = data.get('metadata')
+        data_content = metadata.get('data')
+        
+        file_type = metadata.get('type')
+        filename = metadata.get('name')
+        content_raw = data_content.get('code')
+        file_url = data_content.get('url') 
+        
+        if not all([file_type, filename, content_raw, file_url]):
+             return jsonify({"error": "JSON構造に不足があります。'type', 'name', 'code', 'url'は必須です。"}), 400
+             
+    except Exception:
+        return jsonify({"error": "無効なJSON形式またはJSON構造が不正です。"}), 400
+
+
+    # 2. リポジトリ名とファイルパスの動的抽出
+    try:
+        # URLからリポジトリ名と相対パス部分を抽出
+        # 例: https://github.com/GN/project_repo/path/to/file/
+        url_base_part = file_url.split(f"github.com/{REPO_OWNER}/", 1)[1]
+        
+        # repo_name/path... から repo_name の部分を取得
+        REPO_NAME = url_base_part.split('/', 1)[0]
+        
+        # path... の部分を取得し、不要なスラッシュを除去
+        path_suffix = url_base_part.split('/', 1)[1].strip('/')
+
+        if not REPO_NAME:
+            return jsonify({"error": "URLからリポジトリ名を抽出できませんでした。URL形式を確認してください。"}), 400
+
+        # 最終的なリポジトリ内のファイルパス (例: path/to/filename.py)
+        file_path_in_repo = f"{path_suffix}/{filename}" if path_suffix else filename
+
+    except Exception:
+        return jsonify({"error": "ファイルパス(URL)の解析に失敗しました。URL形式が '...github.com/{GN}/{リポジトリ名}/...' 形式か確認してください。"}), 500
+
+    # 3. コンテンツのBase64エンコード
+    TEXT_TYPES = ['html', 'css', 'py', 'js', 'json', 'cpp', 'yaml', 'md']
+    try:
+        if file_type.lower() in TEXT_TYPES:
+            content_encoded = base64.b64encode(content_raw.encode('utf-8')).decode('utf-8')
+        else:
+            content_encoded = content_raw # バイナリは既エンコード済みと見なす
+    except Exception as e:
+        return jsonify({"error": f"コンテンツのエンコードに失敗しました: {str(e)}"}), 500
+
+    # 4. ファイルのSHAを取得（上書きのために必要）
+    current_sha = None
+    github_api_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{file_path_in_repo}"
+    
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    
+    action_type = "Create"
+    try:
+        get_response = requests.get(github_api_url, headers=headers)
+        
+        if get_response.status_code == 200:
+            # 既存ファイルが存在する -> SHAを取得し、更新モードへ
+            current_sha = get_response.json().get('sha')
+            action_type = "Update"
+        elif get_response.status_code == 404:
+            # ファイルが存在しない -> 新規作成モード
+            pass
+        else:
+            get_response.raise_for_status()
+
+    except requests.exceptions.RequestException:
+        # GETリクエストの通信エラーは無視し、PUTで再試行させる（通常は404か200が来る）
+        pass
+
+
+    # 5. GitHub APIへのPUTリクエスト（作成または更新）
+    
+    payload = {
+        "message": f"feat: {action_type} file {filename} via Flask Vercel tool. [Auto Commit]",
+        "content": content_encoded,
+    }
+    
+    # 更新の場合のみSHAを追加
+    if current_sha:
+        payload["sha"] = current_sha
+    
+    try:
+        put_response = requests.put(github_api_url, headers=headers, json=payload)
+        put_response.raise_for_status()
+
+        # 成功レスポンスを返す
+        return jsonify({
+            "status": "success",
+            "message": f"GitHubファイル '{file_path_in_repo}' の{action_type}に成功しました！🎉",
+            "action_type": action_type,
+            "commit_url": put_response.json().get('commit', {}).get('html_url'),
+            "file_url": put_response.json().get('content', {}).get('html_url')
+        }), 200
+
+    except requests.exceptions.RequestException as e:
+        error_details = put_response.json() if 'put_response' in locals() and put_response.text else "APIからの詳細な応答なし"
+        
+        return jsonify({
+            "status": "error",
+            "message": "GitHub APIでのファイル操作に失敗しました。",
+            "details": str(e),
+            "github_response_detail": error_details
+        }), put_response.status_code if 'put_response' in locals() else 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/url-dl', methods=['GET'])
 def index():
     """最初のURL入力フォームを表示"""
     return render_template_string(HTML_FORM_TEMPLATE())
