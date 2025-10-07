@@ -83,16 +83,7 @@ HOMEHTML = """
 </html>
 """
 
-@app.route('/', methods=['GET'])
-def indexhhhhhhhh():
-    """最初のURL入力フォームを表示"""
-    return render_template_string(INDEX_HTML())
 
-
-@app.route('/home', methods=['GET'])
-def indexhhhhhhhd():
-    """最初のURL入力フォームを表示"""
-    return render_template_string(HOMEHTML())
 
 
 
@@ -815,6 +806,29 @@ def faviconing():
 """
 色見にくくね?
 """
+
+@app.route('/', methods=['GET'])
+def indexhhhhhhhh():
+    """最初のURL入力フォームを表示"""
+    return render_template_string(INDEX_HTML())
+
+
+@app.route('/home', methods=['GET'])
+def indexhhhhhhhd():
+    """最初のURL入力フォームを表示"""
+    return render_template_string(HOMEHTML())
+
+
+
+
+    
+
+
+
+
+
+
+
 
 @app.route('/cmd', methods=['GET', 'POST'])
 def indexs():
