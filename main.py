@@ -950,6 +950,11 @@ def indexhhhhhhhd():
     """最初のURL入力フォームを表示"""
     return render_template_string(HOMEHTML)
 
+@app.route('/games', methods=['GET'])
+def indexhhhhhhd():
+    """最初のURL入力フォームを表示"""
+    return render_template_string(GAMEHTML)
+
 
 
 
