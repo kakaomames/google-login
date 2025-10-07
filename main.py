@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 INDEX_HTML = """
 <html>
+そういう日もあるさ
 </html>
 """
 
