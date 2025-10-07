@@ -810,13 +810,13 @@ def faviconing():
 @app.route('/', methods=['GET'])
 def indexhhhhhhhh():
     """最初のURL入力フォームを表示"""
-    return render_template_string(INDEX_HTML())
+    return render_template_string(INDEX_HTML)
 
 
 @app.route('/home', methods=['GET'])
 def indexhhhhhhhd():
     """最初のURL入力フォームを表示"""
-    return render_template_string(HOMEHTML())
+    return render_template_string(HOMEHTML)
 
 
 
