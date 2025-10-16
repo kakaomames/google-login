@@ -8,10 +8,65 @@ import base64
 import json
 from bs4 import BeautifulSoup
 from typing import Tuple, Dict, Any, Union
+import zipfile
+import io
+from urllib.parse import urlparse
 
  
 
 app = Flask(__name__)
+
+#### # HTML始め‼️‼️
+
+
+# --- テンプレート (3): 複数URL入力フォーム ---
+HTML_IKKATU_FORM = lambda warning="": f"""
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一括URLダウンローダー</title>
+    {CUSTOM_CSS}
+    <style>
+        /* URL入力エリアを大きくするスタイル */
+        #url_list {{ min-height: 200px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+      <h1>📥 一括URLダウンローダー (Ikkatu)</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">ホーム</a></li>
+                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <br>
+                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/link">URL検索✨</a></li>
+                <li><a href="/url-dl">オンラインダウンローダー</a></li>
+                <li><a href="/ikkatu-url">**一括URLダウンローダー**</a></li>
+                <br>
+                <li><a href="/games">ゲーム👿</a></li>
+                
+            </ul>
+        </nav>
+      {f'<p class="warning">{warning}</p>' if warning else ''}
+        <p>ダウンロードしたいファイルのURLを**改行区切り**で複数入力してください。</p>
+        <form method="POST" action="/ikkatu-url">
+            <label for="url_list">URLリスト:</label>
+            <textarea id="url_list" name="url_list" placeholder="例:
+https://example.com/file1.txt
+https://example.com/folder/image.png" required></textarea>
+            <br>
+            <button type="submit">ZIPで一括ダウンロード開始 🚀</button>
+        </form>
+        <hr>
+        <p><a href="/">最初に戻る</a></p>
+    </div>
+</body>
+</html>
+"""
 
 INDEX_HTML = """
 <!DOCTYPE html>
@@ -576,6 +631,48 @@ def curl_request() -> Tuple[Response, int]:
 
 
 
+# --- ZIP構造のためのヘルパー関数 ---
+def get_filepath_in_zip(url: str) -> str:
+    """
+    URLからクエリ、フラグメントを除去し、ホスト名以下のパスをZIP内のファイルパスとして返す。
+    例: https://example.com/assets/js/main.js?v=1 -> assets/js/main.js
+    """
+    try:
+        parsed_url = urlparse(url)
+        # スキームとネットロケーション（ホスト名）を除いたパス部分を取得
+        path_in_zip = parsed_url.path.split(';')[0].split('?')[0].strip('/')
+        
+        # パスが空の場合、ホスト名に基づいてデフォルト名を生成
+        if not path_in_zip:
+            # ドメイン名 + .html など
+            host_parts = parsed_url.netloc.split('.')
+            base_name = host_parts[-2] if len(host_parts) >= 2 else "index"
+            path_in_zip = f"{base_name}_index.html"
+            
+        return path_in_zip
+        
+    except Exception:
+        # 解析エラーの場合のフォールバック
+        return "download_error_unparsable.bin"
+
+
+# --- ルート定義 --- (一番下にしたっかったけど、失敗しました。)
+"""
+njnimimijjnkkibgchvbbubuivghbuhbihhbhbhibhuvhububhubgybgybuhbuhbhubgy uhbijbihbygbuhbhubbj hb gu bh njbjb bh
+今から入れる保険ありますか⁉️
+kakaomamesと、pokemogukunnsと、pokemogukunnと、kakaomameと、pokemogukunnsann、いっぱい活動名あるな…
+"""
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -777,11 +874,134 @@ def handle_github_post():
 
 
 
+#### HTML長くね❓
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# 新規エンドポイント: フォーム表示
+@app.route('/ikkatu-url', methods=['GET'])
+def ikkatu_url_form():
+    """
+    複数URL入力フォームを表示
+    """
+    return render_template_string(HTML_IKKATU_FORM())
+
+# 新規エンドポイント: 一括ダウンロード実行 (CURL対応版)
+@app.route('/ikkatu-url', methods=['POST'])
+def ikkatu_url_download():
+    """
+    フォームから受け取ったURLリストのファイルをダウンロードし、ZIPにまとめて返す。
+    ダウンロードには 'curl -v -L' を使用し、ログを収集する。
+    """
+    url_list_raw = request.form.get('url_list')
+    
+    if not url_list_raw:
+        return render_template_string(HTML_IKKATU_FORM("URLを入力してください。")), 400
+    
+    # URLリストを改行で分割し、空行や空白行を除去
+    urls = [url.strip() for url in url_list_raw.split('\n') if url.strip()]
+    
+    if not urls:
+        return render_template_string(HTML_IKKATU_FORM("有効なURLが一つもありませんでした。")), 400
+
+    # ZIPファイル作成用のバッファ
+    buffer = io.BytesIO()
+    
+    # ダウンロードログを格納する文字列
+    log_content = io.StringIO()
+    log_content.write("--- 一括URLダウンロード 実行ログ ---\n")
+    
+    # ログファイルをZIPのルートに入れるため、ファイル名を固定
+    LOG_FILENAME = "download_execution_log.txt"
+    
+    try:
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for i, target_url in enumerate(urls):
+                log_content.write(f"\n[{i+1}/{len(urls)}] 🚀 URL: {target_url}\n")
+                
+                # ZIP内のパスを決定
+                zip_file_path = get_filepath_in_zip(target_url) 
+
+                try:
+                    # 1. 'curl -v -L URL' コマンドを実行
+                    result = subprocess.run(
+                        ['curl', '-v', '-L', target_url],
+                        capture_output=True,
+                        timeout=30 
+                    )
+
+                    # ログ (-v の出力) を収集
+                    logs = result.stderr.decode('utf-8', errors='ignore')
+                    log_content.write(logs)
+                    
+                    if result.returncode == 0 and result.stdout:
+                        content_binary = result.stdout
+                        
+                        # 2. ZIPに書き込む (arcnameに構造化されたパスを使用)
+                        zipf.writestr(zip_file_path, content_binary)
+                        log_content.write(f"✅ 成功: ファイルをZIPパス '{zip_file_path}' ({len(content_binary)} bytes) に追加しました。\n")
+                        
+                    else:
+                        # エラーログをZIPに追加
+                        error_msg = f"❌ CURL実行エラー。終了コード: {result.returncode}。"
+                        log_content.write(error_msg + "\n")
+                        # エラーファイルは "error_logs/" ディレクトリに格納
+                        zip_error_log_path = f"error_logs/{i+1:02d}_error.log" 
+                        zipf.writestr(zip_error_log_path, (error_msg + "\n" + logs).encode('utf-8'))
+                        log_content.write(f"⚠️ エラーログをZIPパス '{zip_error_log_path}' に保存しました。\n")
+
+                except subprocess.TimeoutExpired:
+                    error_msg = f"❌ タイムアウトエラー: {target_url} のダウンロードが30秒を超えました。"
+                    log_content.write(error_msg + "\n")
+                    zip_error_log_path = f"error_logs/{i+1:02d}_timeout.log"
+                    zipf.writestr(zip_error_log_path, error_msg.encode('utf-8'))
+
+                except Exception as e:
+                    error_msg = f"❌ 予期せぬエラー: {str(e)}"
+                    log_content.write(error_msg + "\n")
+                    zip_error_log_path = f"error_logs/{i+1:02d}_fatal.log"
+                    zipf.writestr(zip_error_log_path, error_msg.encode('utf-8'))
+        
+        # 3. 実行ログ全体をZIPのルートに追加 (LOG_FILENAME)
+        zipf.writestr(LOG_FILENAME, log_content.getvalue().encode('utf-8'))
+        log_content.write(f"\n--- 実行ログをルート階層の '{LOG_FILENAME}' としてZIPに追加しました。---\n")
+
+        # 4. バッファのポインタを先頭に戻す
+        buffer.seek(0)
+        
+        # 5. ZIPファイルをクライアントに送信
+        return send_file(
+            buffer, 
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name='bulk_download_structured_with_log.zip'
+        )
+
+    except Exception as e:
+        error_message = f"致命的なZIP作成エラーが発生しました: {str(e)}"
+        print(f"🚨 致命的なエラー: {error_message}")
+        return render_template_string(HTML_IKKATU_FORM(f"致命的なエラーが発生しました: {str(e)}")), 500
+
+
+
+
+
+
+        
 
 
 @app.route('/url-dl', methods=['GET'])
