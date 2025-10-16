@@ -636,7 +636,11 @@ def curl_request() -> Tuple[Response, int]:
 
 
 
+
+
 # --- ZIP構造のためのヘルパー関数 ---
+from urllib.parse import urlparse
+
 def get_filepath_in_zip(url: str) -> str:
     """
     URLからクエリ、フラグメントを除去し、ホスト名以下のパスをZIP内のファイルパスとして返す。
@@ -659,6 +663,10 @@ def get_filepath_in_zip(url: str) -> str:
     except Exception:
         # 解析エラーの場合のフォールバック
         return "download_error_unparsable.bin"
+
+
+
+        
 
 
 # --- ルート定義 --- (一番下にしたっかったけど、失敗しました。)
@@ -918,7 +926,6 @@ def ikkatu_url_download():
     if not url_list_raw:
         return render_template_string(HTML_IKKATU_FORM("URLを入力してください。")), 400
     
-    # URLリストを改行で分割し、空行や空白行を除去
     urls = [url.strip() for url in url_list_raw.split('\n') if url.strip()]
     
     if not urls:
@@ -935,11 +942,13 @@ def ikkatu_url_download():
     LOG_FILENAME = "download_execution_log.txt"
     
     try:
+        # ZIPファイルをオープンし、処理を開始
+        # ZIPファイル全体はディスクではなく、メモリバッファ(buffer)に作成されます
         with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for i, target_url in enumerate(urls):
                 log_content.write(f"\n[{i+1}/{len(urls)}] 🚀 URL: {target_url}\n")
                 
-                # ZIP内のパスを決定
+                # ZIP内のパスを決定 (構造化)
                 zip_file_path = get_filepath_in_zip(target_url) 
 
                 try:
@@ -957,7 +966,7 @@ def ikkatu_url_download():
                     if result.returncode == 0 and result.stdout:
                         content_binary = result.stdout
                         
-                        # 2. ZIPに書き込む (arcnameに構造化されたパスを使用)
+                        # 2. ZIPに書き込む
                         zipf.writestr(zip_file_path, content_binary)
                         log_content.write(f"✅ 成功: ファイルをZIPパス '{zip_file_path}' ({len(content_binary)} bytes) に追加しました。\n")
                         
@@ -967,6 +976,7 @@ def ikkatu_url_download():
                         log_content.write(error_msg + "\n")
                         # エラーファイルは "error_logs/" ディレクトリに格納
                         zip_error_log_path = f"error_logs/{i+1:02d}_error.log" 
+                        # エラーメッセージとcurlログをエラーファイルとしてZIPに追加
                         zipf.writestr(zip_error_log_path, (error_msg + "\n" + logs).encode('utf-8'))
                         log_content.write(f"⚠️ エラーログをZIPパス '{zip_error_log_path}' に保存しました。\n")
 
@@ -982,9 +992,11 @@ def ikkatu_url_download():
                     zip_error_log_path = f"error_logs/{i+1:02d}_fatal.log"
                     zipf.writestr(zip_error_log_path, error_msg.encode('utf-8'))
         
-        # 3. 実行ログ全体をZIPのルートに追加 (LOG_FILENAME)
-        zipf.writestr(LOG_FILENAME, log_content.getvalue().encode('utf-8'))
-        log_content.write(f"\n--- 実行ログをルート階層の '{LOG_FILENAME}' としてZIPに追加しました。---\n")
+            # 🚀 ZIPクローズエラー解消の修正ポイント
+            # 実行ログ全体をZIPのルートに追加 (LOG_FILENAME)
+            # withブロックの内側なので、zipfはまだ開いています。
+            zipf.writestr(LOG_FILENAME, log_content.getvalue().encode('utf-8'))
+            log_content.write(f"\n--- 実行ログをルート階層の '{LOG_FILENAME}' としてZIPに追加しました。---\n")
 
         # 4. バッファのポインタを先頭に戻す
         buffer.seek(0)
@@ -998,9 +1010,13 @@ def ikkatu_url_download():
         )
 
     except Exception as e:
+        # この try-except は主に ZIP作成失敗などの致命的なエラーをキャッチします
         error_message = f"致命的なZIP作成エラーが発生しました: {str(e)}"
         print(f"🚨 致命的なエラー: {error_message}")
         return render_template_string(HTML_IKKATU_FORM(f"致命的なエラーが発生しました: {str(e)}")), 500
+
+
+        
 
 
 
