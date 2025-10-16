@@ -38,14 +38,14 @@ HTML_IKKATU_FORM = lambda warning="": f"""
       <h1>📥 一括URLダウンローダー (Ikkatu)</h1>
         <nav>
             <ul>
-                <li><a href="/home">ホーム</a></li>
-                <li><a href="/h">GITHUBにセーブデータ保存</a></li>
-                <li><a href="/cmd">Webコマンド実行ツール</a></li>
+                <li><a href="/home">🏠ホーム</a></li>
+                <li><a href="/h">🐱GITHUBにセーブデータ保存</a></li>
+                <li><a href="/cmd">💻Webコマンド実行ツール</a></li>
                 <br>
-                <li><a href="/run?cmd=">直接コマンド実行したい方向け...</a></li>
+                <li><a href="/run?cmd=">⁉️直接コマンド実行したい方向け...</a></li>
                 <li><a href="/link">URL検索✨</a></li>
-                <li><a href="/url-dl">オンラインダウンローダー</a></li>
-                <li><a href="/ikkatu-url">**一括URLダウンローダー**</a></li>
+                <li><a href="/url-dl">🔗オンラインダウンローダー</a></li>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <br>
                 <li><a href="/games">ゲーム👿</a></li>
                 
@@ -125,6 +125,7 @@ HOMEHTML = """
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -166,6 +167,7 @@ GAMEHTML = """
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -244,6 +246,7 @@ HTML_FORM_TEMPLATE = lambda warning="": f"""
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -285,6 +288,7 @@ HTML_SELECT_TEMPLATE = lambda name1, name2, original_url: f"""
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -364,7 +368,7 @@ def get_filename_options(url):
         return f"{DEFAULT_NAME_BASE}.bin", f"{DEFAULT_NAME_BASE}_full.bin"
 
 
-# --- ルート定義 ---
+# --- ルート定義...?
 
 
 
@@ -415,6 +419,7 @@ def get_link_form_html() -> str:
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -710,6 +715,7 @@ HTML1 = """
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
@@ -1096,6 +1102,7 @@ HTML_TEMPLATE = """
                 <li><a href="/link">URL検索✨</a></li>
                 <li><a href="/url-dl">オンラインダウンローダー</a></li>
                 <br>
+                <li><a href="/ikkatu-url">🔗一括URLダウンローダー🔗</a></li>
                 <li><a href="/games">ゲーム👿</a></li>
                 
             </ul>
