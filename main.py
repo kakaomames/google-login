@@ -817,10 +817,10 @@ def download():
     # ユーザーの要望通り、curl -L を使用してファイル内容を取得します。
     try:
         result = subprocess.run(
-            ['curl', '-s', '-L', target_url],
+            ['curl', '-s', '-L', '-#', '-C', '-', target_url],
             capture_output=True,
             check=True,
-            timeout=60 # タイムアウトを少し長めに設定
+            timeout=80 # タイムアウトを少し長めに設定
         )
 
         file_data = io.BytesIO(result.stdout)
