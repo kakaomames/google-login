@@ -114,7 +114,7 @@ def indexhhhhhhhd():
 
 
 
- @app.route('/login/google', methods=['GET'])
+@app.route('/login/google', methods=['GET'])
 def callback():
     """
     Googleから認証コードを受け取り、アクセストークンと交換するエンドポイント
