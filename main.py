@@ -10,6 +10,9 @@ app = Flask(__name__)
 # --- 1. 環境変数から機密情報を読み込む ---
 # Vercelの環境変数で 'SESSION_KEY' を設定する必要があります
 app.secret_key = os.environ.get('SESSION_KEY', 'VERY_INSECURE_DEFAULT_KEY_CHANGE_ME') 
+# ★★★ 修正箇所: リダイレクト先のフロントエンドURIを設定 ★★★
+# Vercelの環境変数に、フロントエンドのベースURIを設定することを推奨します
+FRONTEND_BASE_URI = os.environ.get('FRONTEND_URI', 'https://kakaomames.github.io')
 
 # Vercelに設定する環境変数名に合わせて修正
 CLIENT_ID = os.environ.get('G_CI')
@@ -204,6 +207,9 @@ def refresh_access_token():
         )
         refresh_data = refresh_response.json()
 
+
+        
+
         if 'access_token' in refresh_data:
             # 成功: 新しいアクセストークン情報を返却
             new_access_token = refresh_data['access_token']
@@ -211,13 +217,34 @@ def refresh_access_token():
             # ★重要★
             # 実際には、この新しい access_token を、フロントエンドまたは
             # データを要求する関数に安全に渡す必要があります。
+
+
+            if 'access_token' in token_data:
+            new_access_token = token_data['access_token']
             
-            return jsonify({
-                "status": "success",
-                "message": "アクセストークンのリフレッシュに成功しました",
-                "new_access_token": new_access_token,
-                "expires_in": refresh_data.get('expires_in')
-            })
+            # --- ここが重要: フロントエンドにリダイレクトする ---
+            
+            # 1. 成功メッセージをクエリパラメータに格納
+            success_params = {
+                'login_status': 'success',
+                # 2. アクセストークンを渡す (一時的/テスト用)
+                #    ※ 本番ではセキュリティのため、トークンをセッションID経由で渡すべきですが、
+                #    今回はシンプル化のためクエリパラメータで渡します。
+                'access_token': new_access_token,
+            }
+            
+            # 3. クエリパラメータを構築
+            query_string = '&'.join(f'{k}={v}' for k, v in success_params.items())
+            
+            # 4. フロントエンドのダッシュボードなどにリダイレクト
+            # 例: https://kakaomames.github.io/?login_status=success&access_token=...
+            redirect_url = f"{FRONTEND_BASE_URI}/?{query_string}"
+            
+            # Flaskのredirect関数でリダイレクト
+            return redirect(redirect_url) 
+            
+            # 修正前: return jsonify({"status": "success", ...}) # これを削除
+        
         else:
             # トークンリフレッシュの失敗（例：リフレッシュトークンが無効）
             return jsonify({
