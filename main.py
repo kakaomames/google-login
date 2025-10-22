@@ -256,6 +256,74 @@ def refresh_access_token():
     except Exception as e:
         return jsonify({"status": "error", "message": f"サーバー内部エラー: {str(e)}"}), 500
 
+
+
+
+
+
+@app.route('/api/youtube_channel', methods=['GET'])
+def get_user_channel_info():
+    """
+    ユーザーのアクセストークンを使用して、YouTubeチャンネル情報を取得するエンドポイント
+    """
+    # フロントエンドからクエリパラメータとして渡されたアクセストークンを取得
+    access_token = request.args.get('access_token')
+
+    if not access_token:
+        return jsonify({
+            "status": "error", 
+            "message": "access_tokenが提供されていません。ログインが必要です。"
+        }), 401
+
+    # 2. YouTube Data API v3 のエンドポイント
+    youtube_url = 'https://www.googleapis.com/youtube/v3/channels'
+    
+    # 3. リクエストパラメータとヘッダーを設定
+    params = {
+        'part': 'snippet,contentDetails,statistics', # 取得したい情報（チャンネル名、統計情報など）
+        'mine': 'true'                               # ログインユーザー自身のチャンネル情報を要求
+    }
+    
+    headers = {
+        'Authorization': f'Bearer {access_token}', # ★アクセストークンをヘッダーに設定
+        'Accept': 'application/json'
+    }
+
+    try:
+        # 4. YouTube APIへのリクエストを送信
+        response = requests.get(youtube_url, params=params, headers=headers)
+        response.raise_for_status() # HTTPエラーが発生した場合に例外を発生させる
+
+        channel_data = response.json()
+
+        if channel_data.get('items'):
+            # 成功: 取得したチャンネルデータを返却
+            return jsonify({
+                "status": "success",
+                "message": "チャンネル情報の取得に成功しました",
+                "channel_info": channel_data['items'][0]
+            })
+        else:
+            # チャンネル情報が見つからない場合（APIの応答が空の場合など）
+             return jsonify({
+                "status": "error",
+                "message": "チャンネル情報が見つかりませんでした (チャンネルを作成していない可能性があります)"
+            }), 404
+
+
+    except requests.exceptions.RequestException as e:
+        # HTTPエラー（401 Unauthorizedなど）を捕捉
+        if response.status_code == 401:
+            error_message = "トークンの期限切れまたは無効です。トークンをリフレッシュしてください。"
+        else:
+            error_message = f"YouTube APIエラー: {e}"
+            
+        return jsonify({
+            "status": "error",
+            "message": error_message,
+            "details": response.text
+        }), response.status_code if 'response' in locals() else 500
+
 # Vercel Functionとして動作させるための設定は vercel.json に依存します
 # 開発環境でローカル実行するための設定
 if __name__ == '__main__':
