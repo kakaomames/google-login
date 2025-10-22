@@ -137,7 +137,6 @@ def callback():
         return jsonify({"status": "error", "message": "サーバー設定エラー: 環境変数が不足しています"}), 500
 
     token_exchange_url = 'https://oauth2.googleapis.com/token'
-    
     try:
         token_response = requests.post(
             token_exchange_url,
@@ -150,7 +149,6 @@ def callback():
             }
         )
         token_data = token_response.json()
-
         if 'access_token' in token_data:
             # 成功: トークン情報をフロントエンドへ渡し、リダイレクト
             new_access_token = token_data['access_token']
@@ -162,23 +160,18 @@ def callback():
             # リフレッシュトークンもあれば渡す（テスト用）
             if 'refresh_token' in token_data:
                 success_params['refresh_token'] = token_data['refresh_token']
-            
-            query_string = '&'.join(f'{k}={v}' for k, v in success_params.items())
-            
+            query_string = '&'.join(f'{k}={v}' for k, v in success_params.items())  
             redirect_url = f"{FRONTEND_BASE_URI}/?{query_string}"
-            
             # リダイレクトを強制するレスポンス
             response = Response(status=302)
             response.headers['Location'] = redirect_url
-            return response # ★★★ これでリダイレクト！ ★★★
-        
+            return response # ★★★ これでリダイレクト！ ★★★        
         else:
             return jsonify({
                 "status": "error",
                 "message": "トークン交換に失敗しました",
                 "details": token_data.get('error_description', '詳細不明のエラー')
             }), 400
-
     except Exception as e:
         return jsonify({"status": "error", "message": f"サーバー内部エラー: {str(e)}"}), 500
 
