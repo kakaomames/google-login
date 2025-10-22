@@ -133,7 +133,6 @@ def callback():
         # 認証開始のためのリダイレクト処理（もしユーザーが直接アクセスした場合）
         # ※ 今回のフロントエンドはJSでリダイレクトしているので不要かもしれませんが、念のため。
         return jsonify({"status": "error", "message": "認証コードが見つかりません"}), 400
-    
     if not all([CLIENT_ID, CLIENT_SECRET, REDIRECT_URI]):
         return jsonify({"status": "error", "message": "サーバー設定エラー: 環境変数が不足しています"}), 500
 
