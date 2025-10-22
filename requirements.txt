@@ -1,5 +1,2 @@
 Flask
-beautifulsoup4
-pycurl
-certifi
 requests
