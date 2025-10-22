@@ -3,11 +3,12 @@ import os
 import json
 import requests
 from flask import Flask, redirect, request, jsonify, render_template_string, Response
-
+from flask_cors import CORS
 # Flaskアプリのインスタンスを作成
 
 # Flaskアプリのインスタンスを作成
 app = Flask(__name__)
+CORS(app)
 
 # --- 1. 環境変数から機密情報を読み込む ---
 # Vercelの環境変数で 'SESSION_KEY' を設定する必要があります
