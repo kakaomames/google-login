@@ -183,17 +183,13 @@ def callback():
 def refresh_access_token():
     """
     保存されたリフレッシュトークンを使用して、新しいアクセストークンを取得する
-    """
-    
+    """  
     # REFRESH_TOKEN が定義されていない可能性があるのでチェック
     if not REFRESH_TOKEN:
         return jsonify({"status": "error", "message": "サーバー設定エラー: REFRESH_TOKEN(RT)が不足しています"}), 500
-    
     if not all([CLIENT_ID, CLIENT_SECRET]):
         return jsonify({"status": "error", "message": "サーバー設定エラー: 認証情報が不足しています"}), 500
-
-    token_refresh_url = 'https://oauth2.googleapis.com/token'
-    
+    token_refresh_url = 'https://oauth2.googleapis.com/token' 
     try:
         refresh_response = requests.post(
             token_refresh_url,
@@ -205,7 +201,6 @@ def refresh_access_token():
             }
         )
         refresh_data = refresh_response.json()
-
         if 'access_token' in refresh_data:
             # 成功: 新しいアクセストークン情報をJSONで返却
             return jsonify({
@@ -221,12 +216,9 @@ def refresh_access_token():
                 "message": "アクセストークンのリフレッシュに失敗しました",
                 "details": refresh_data.get('error_description', '詳細不明のエラー')
             }), 400
-
     except Exception as e:
         return jsonify({"status": "error", "message": f"サーバー内部エラー: {str(e)}"}), 500
-
 # ... (中略: /api/youtube_channel のエンドポイントはそのまま) ...
-
 # ----------------------------------------------------
 # ★★★ /api/youtube_channel エンドポイントはそのまま ★★★
 # ----------------------------------------------------
