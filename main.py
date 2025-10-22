@@ -11,8 +11,7 @@ app = Flask(__name__)
 
 # --- 1. 環境変数から機密情報を読み込む ---
 # Vercelの環境変数で 'SESSION_KEY' を設定する必要があります
-app.secret_key = os.environ.get('SESSION_KEY', 'VERY_INSECURE_DEFAULT_KEY_CHANGE_ME') 
-
+app.secret_key = os.environ.get('SESSION_KEY', 'VERY_INSECURE_DEFAULT_KEY_CHANGE_ME')
 # Vercel環境変数から各値を読み込み
 FRONTEND_BASE_URI = os.environ.get('FRONTEND_URI', 'https://kakaomames.github.io')
 CLIENT_ID = os.environ.get('G_CI')
