@@ -171,9 +171,9 @@ def callback():
         return jsonify({"status": "error", "message": f"サーバー内部エラー: {str(e)}"}), 500
 
 # Vercel Functionとして動作させるためのエントリポイント
-def handler(event, context):
-    """Vercelがサーバーレス関数を実行するためのエントリポイント"""
-    return app.wsgi_app(event, context)
+# def handler(event, context):
+#     """Vercelがサーバーレス関数を実行するためのエントリポイント"""
+#.    return app.wsgi_app(event, context)
 
 # 開発環境でローカル実行するための設定
 if __name__ == '__main__':
