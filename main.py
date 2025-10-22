@@ -2,7 +2,7 @@
 import os
 import json
 import requests
-from flask import Flask, redirect, request, jsonify, render_template_string
+from flask import Flask, redirect, request, jsonify, render_template_string, Response
 
 # Flaskアプリのインスタンスを作成
 
