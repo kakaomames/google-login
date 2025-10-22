@@ -180,7 +180,7 @@ def callback():
 
 
 
-。
+
 
 @app.route('/api/refresh_token', methods=['GET'])
 def refresh_access_token():
