@@ -220,25 +220,25 @@ def refresh_access_token():
 
 
             if 'access_token' in token_data:
-            new_access_token = token_data['access_token']
+             new_access_token = token_data['access_token']
             
             # --- ここが重要: フロントエンドにリダイレクトする ---
             
             # 1. 成功メッセージをクエリパラメータに格納
-            success_params = {
+             success_params = {
                 'login_status': 'success',
                 # 2. アクセストークンを渡す (一時的/テスト用)
                 #    ※ 本番ではセキュリティのため、トークンをセッションID経由で渡すべきですが、
                 #    今回はシンプル化のためクエリパラメータで渡します。
                 'access_token': new_access_token,
-            }
+             }
             
             # 3. クエリパラメータを構築
-            query_string = '&'.join(f'{k}={v}' for k, v in success_params.items())
+             query_string = '&'.join(f'{k}={v}' for k, v in success_params.items())
             
             # 4. フロントエンドのダッシュボードなどにリダイレクト
             # 例: https://kakaomames.github.io/?login_status=success&access_token=...
-            redirect_url = f"{FRONTEND_BASE_URI}/?{query_string}"
+             redirect_url = f"{FRONTEND_BASE_URI}/?{query_string}"
             
             # Flaskのredirect関数でリダイレクト
             return redirect(redirect_url) 
