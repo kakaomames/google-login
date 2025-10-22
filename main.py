@@ -175,6 +175,61 @@ def callback():
 #     """Vercelがサーバーレス関数を実行するためのエントリポイント"""
 #.    return app.wsgi_app(event, context)
 
+
+
+。
+
+@app.route('/api/refresh_token', methods=['GET'])
+def refresh_access_token():
+    """
+    保存されたリフレッシュトークンを使用して、新しいアクセストークンを取得する
+    """
+    
+    # 必須環境変数のチェック
+    if not all([CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN]):
+        return jsonify({"status": "error", "message": "サーバー設定エラー: 認証情報が不足しています"}), 500
+
+    # 2. Googleのトークンエンドポイントにリクエストを送信
+    token_refresh_url = 'https://oauth2.googleapis.com/token'
+    
+    try:
+        refresh_response = requests.post(
+            token_refresh_url,
+            data={
+                'client_id': CLIENT_ID,
+                'client_secret': CLIENT_SECRET,
+                'refresh_token': REFRESH_TOKEN,
+                'grant_type': 'refresh_token' # ★トークンリフレッシュに必要な値
+            }
+        )
+        refresh_data = refresh_response.json()
+
+        if 'access_token' in refresh_data:
+            # 成功: 新しいアクセストークン情報を返却
+            new_access_token = refresh_data['access_token']
+            
+            # ★重要★
+            # 実際には、この新しい access_token を、フロントエンドまたは
+            # データを要求する関数に安全に渡す必要があります。
+            
+            return jsonify({
+                "status": "success",
+                "message": "アクセストークンのリフレッシュに成功しました",
+                "new_access_token": new_access_token,
+                "expires_in": refresh_data.get('expires_in')
+            })
+        else:
+            # トークンリフレッシュの失敗（例：リフレッシュトークンが無効）
+            return jsonify({
+                "status": "error",
+                "message": "アクセストークンのリフレッシュに失敗しました",
+                "details": refresh_data.get('error_description', '詳細不明のエラー')
+            }), 400
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"サーバー内部エラー: {str(e)}"}), 500
+
+# Vercel Functionとして動作させるための設定は vercel.json に依存します
 # 開発環境でローカル実行するための設定
 if __name__ == '__main__':
     # ローカル開発用に環境変数を設定してテスト
